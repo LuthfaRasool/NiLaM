@@ -211,6 +211,26 @@ app.get('/api/search', requirePermission('case.read'), async (req, res, next) =>
 registerRoutes(app);
 
 const WEB = path.resolve(HERE, '../../apps/web/dist');
+const CITIZEN = path.resolve(HERE, '../../apps/citizen/dist');
+const FIELD = path.resolve(HERE, '../../apps/field/dist');
+
+/* Citizen mobile app */
+app.use('/citizen', express.static(CITIZEN));
+app.get(['/citizen', '/citizen/*'], (_req, res) => {
+  res.sendFile(path.join(CITIZEN, 'index.html'), (err) => {
+    if (err) res.status(503).type('text/plain').send('NiLaM Citizen app not built yet. Run: node tools/build-web.mjs');
+  });
+});
+
+/* Field verifier mobile app */
+app.use('/field', express.static(FIELD));
+app.get(['/field', '/field/*'], (_req, res) => {
+  res.sendFile(path.join(FIELD, 'index.html'), (err) => {
+    if (err) res.status(503).type('text/plain').send('NiLaM Field app not built yet. Run: node tools/build-web.mjs');
+  });
+});
+
+/* Web dashboard */
 app.use('/assets', express.static(path.join(WEB, 'assets'), { fallthrough: true }));
 app.get(/^\/(?!api\/).*/, (_req, res) => {
   res.sendFile(path.join(WEB, 'index.html'), (err) => {

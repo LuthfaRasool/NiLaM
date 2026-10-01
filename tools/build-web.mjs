@@ -97,6 +97,100 @@ function writeHtml() {
   fs.writeFileSync(path.join(OUT, 'index.html'), html, 'utf8');
 }
 
+async function buildCitizen() {
+  const CITIZEN_SRC = path.join(ROOT, 'apps', 'citizen', 'src');
+  const CITIZEN_OUT = path.join(ROOT, 'apps', 'citizen', 'dist');
+  fs.mkdirSync(CITIZEN_OUT, { recursive: true });
+
+  // Copy CSS
+  if (fs.existsSync(path.join(CITIZEN_SRC, 'citizen.css'))) {
+    fs.copyFileSync(path.join(CITIZEN_SRC, 'citizen.css'), path.join(CITIZEN_OUT, 'citizen.css'));
+  }
+
+  // HTML
+  const html = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>NiLaM Citizen — Land Records & Acquisition</title>
+<meta name="description" content="NiLaM Citizen Mobile App. Track your land acquisition cases, provide consent, and view compensation details." />
+<meta name="theme-color" content="#0b3d79" />
+<link rel="stylesheet" href="/citizen/citizen.css" />
+</head>
+<body>
+<div id="root"></div>
+<noscript>NiLaM Citizen requires JavaScript enabled to run.</noscript>
+<script src="/citizen/app.js"></script>
+</body>
+</html>
+`;
+  fs.writeFileSync(path.join(CITIZEN_OUT, 'index.html'), html, 'utf8');
+
+  await runEsbuild([
+    path.join(CITIZEN_SRC, 'main.jsx'),
+    '--bundle',
+    '--outfile=' + path.join(CITIZEN_OUT, 'app.js'),
+    '--loader:.jsx=jsx',
+    '--loader:.js=jsx',
+    '--format=iife',
+    '--target=es2020',
+    '--jsx=automatic',
+    '--define:process.env.NODE_ENV="production"',
+    '--minify',
+    '--legal-comments=none',
+    '--log-level=warning'
+  ]);
+  console.log('NiLaM Citizen mobile build complete -> ' + CITIZEN_OUT);
+}
+
+async function buildField() {
+  const FIELD_SRC = path.join(ROOT, 'apps', 'field', 'src');
+  const FIELD_OUT = path.join(ROOT, 'apps', 'field', 'dist');
+  fs.mkdirSync(FIELD_OUT, { recursive: true });
+
+  // Copy CSS
+  if (fs.existsSync(path.join(FIELD_SRC, 'field.css'))) {
+    fs.copyFileSync(path.join(FIELD_SRC, 'field.css'), path.join(FIELD_OUT, 'field.css'));
+  }
+
+  // HTML
+  const html = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>NiLaM Field — Surveyor & Demarcation</title>
+<meta name="description" content="NiLaM Field Verifier App. Camera-based corner capture and GPS geotagging for land verification." />
+<meta name="theme-color" content="#083670" />
+<link rel="stylesheet" href="/field/field.css" />
+</head>
+<body>
+<div id="root"></div>
+<noscript>NiLaM Field Verifier requires JavaScript enabled to run.</noscript>
+<script src="/field/app.js"></script>
+</body>
+</html>
+`;
+  fs.writeFileSync(path.join(FIELD_OUT, 'index.html'), html, 'utf8');
+
+  await runEsbuild([
+    path.join(FIELD_SRC, 'main.jsx'),
+    '--bundle',
+    '--outfile=' + path.join(FIELD_OUT, 'app.js'),
+    '--loader:.jsx=jsx',
+    '--loader:.js=jsx',
+    '--format=iife',
+    '--target=es2020',
+    '--jsx=automatic',
+    '--define:process.env.NODE_ENV="production"',
+    '--minify',
+    '--legal-comments=none',
+    '--log-level=warning'
+  ]);
+  console.log('NiLaM Field Verifier mobile build complete -> ' + FIELD_OUT);
+}
+
 async function build() {
   fs.mkdirSync(OUT, { recursive: true });
   copyCss();
@@ -126,6 +220,10 @@ async function build() {
   console.log(`  app.js       ${size(appJs)}`);
   console.log(`  nilam.css    ${size(css)}`);
   console.log(`  output       ${OUT}`);
+
+  // Build the dedicated citizen and field mobile apps
+  await buildCitizen();
+  await buildField();
 }
 
 try {

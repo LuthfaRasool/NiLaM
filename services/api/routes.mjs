@@ -1096,6 +1096,74 @@ export function registerRoutes(app) {
   });
 
   /* ---------------------------------------------------------------- *
+   * Map & GIS: all project corridor parcels for interactive map
+   * ---------------------------------------------------------------- */
+
+  app.get('/api/map/parcels', requirePermission('case.read'), async (req, res, next) => {
+    try {
+      const conn = await db();
+      const rows = await conn.all(
+        `select p.id, p.survey_no, p.plot_no, p.record_area_hectares, p.notified_area_hectares,
+                p.land_class, p.land_use, p.geometry, p.centroid,
+                v.name as village_name, v.taluka,
+                c.id as case_id, c.case_no, c.stage, c.track, c.priority,
+                (select owner_name from parcel_owners o where o.parcel_id = p.id order by o.id limit 1) as owner_name,
+                (select count(*) from field_captures fc where fc.case_id = c.id) as capture_count,
+                (select count(*) from discrepancies d where d.case_id = c.id) as discrepancy_count,
+                (select amount_inr from compensation_estimates ce where ce.case_id = c.id order by ce.id desc limit 1) as compensation_inr
+         from parcels p
+         left join villages v on v.id = p.village_id
+         left join cases c on c.parcel_id = p.id
+         order by p.id`
+      );
+
+      const features = rows
+        .map((r) => {
+          const geom = jparse(r.geometry);
+          if (!geom) return null;
+          return {
+            type: 'Feature',
+            id: r.id,
+            geometry: geom,
+            properties: {
+              parcelId: r.id,
+              surveyNo: r.survey_no,
+              plotNo: r.plot_no,
+              recordAreaHectares: Number(r.record_area_hectares) || 0,
+              notifiedAreaHectares: Number(r.notified_area_hectares) || 0,
+              landClass: r.land_class,
+              landUse: r.land_use,
+              village: r.village_name,
+              taluka: r.taluka,
+              caseId: r.case_id,
+              caseNo: r.case_no,
+              stage: r.stage,
+              track: r.track,
+              priority: r.priority,
+              ownerName: r.owner_name,
+              captureCount: r.capture_count,
+              discrepancyCount: r.discrepancy_count,
+              compensationINR: r.compensation_inr ? Number(r.compensation_inr) : null,
+              centroid: jparse(r.centroid)
+            }
+          };
+        })
+        .filter(Boolean);
+
+      res.json({
+        type: 'FeatureCollection',
+        features,
+        meta: {
+          totalParcels: features.length,
+          generatedAt: nowIso()
+        }
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  /* ---------------------------------------------------------------- *
    * Field verifier: today's assignments and the offline sync endpoint
    * ---------------------------------------------------------------- */
 

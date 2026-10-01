@@ -32,7 +32,7 @@ async function req(method, path, { token, body } = {}) {
   let json = null;
   const text = await res.text();
   if (text) { try { json = JSON.parse(text); } catch { json = null; } }
-  return { status: res.status, json };
+  return { status: res.status, json, text };
 }
 
 function check(name, fn) {
@@ -141,6 +141,26 @@ await check('a role with no such permission is refused on models endpoint', asyn
   const caseId = q.json.all[0].caseId;
   const r = await req('POST', `/api/cases/${caseId}/models/run`, { token: fv.json.token });
   assert.equal(r.status, 403);
+});
+
+await check('map parcels endpoint returns GeoJSON FeatureCollection', async () => {
+  const nhai = await req('POST', '/api/auth/login', { body: { username: 'nhai', password: 'nilam@2026' } });
+  const r = await req('GET', '/api/map/parcels', { token: nhai.json.token });
+  assert.equal(r.status, 200);
+  assert.equal(r.json.type, 'FeatureCollection');
+  assert.ok(r.json.features.length >= 1);
+  assert.ok(r.json.features[0].geometry.coordinates);
+  assert.ok(r.json.features[0].properties.surveyNo);
+});
+
+await check('citizen and field apps are served with clean HTML entrypoints', async () => {
+  const c = await req('GET', '/citizen/');
+  assert.equal(c.status, 200);
+  assert.ok(c.text.includes('NiLaM Citizen'));
+
+  const f = await req('GET', '/field/');
+  assert.equal(f.status, 200);
+  assert.ok(f.text.includes('NiLaM Field'));
 });
 
 console.log('');

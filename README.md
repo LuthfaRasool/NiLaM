@@ -61,25 +61,33 @@ $env:NILAM_PORT = "4180"
 node services/api/server.mjs
 ```
 
-Open **http://127.0.0.1:4180**.
+Open **http://127.0.0.1:4180** (or your configured `$env:NILAM_PORT`).
 
-### Demonstration accounts
+### Application Entrypoints
 
-Password for every account: **`nilam@2026`**
-
-| Username | Role | What you see |
+| Application | Path | Target Audience & Features |
 | --- | --- | --- |
-| `lao` | Land Acquisition Officer | Acquisition queue, case workspace, transitions |
-| `registrar` | Sub-Registrar | Purchase-track scrutiny queue |
-| `collector` | Collector | Approvals, disputes, at-risk cases |
-| `treasury` | Treasury Officer | Payments due and failed |
-| `nhai` | Government / NHAI | Project progress and projected delays |
-| `ramesh` / `sunita` / `vithal` | Citizens | Own cases, tracker, consent/objection |
-| `surveyor1` / `surveyor2` | Field verifiers | Assignments |
-| `auditor` | Audit & Vigilance | Read-only ledger and cases |
+| **NiLaM Portal (Web)** | `/` | **Government & Officers**: Queue workspace, Section 11–38 statutory workflow, audit ledger, and interactive **GIS Corridor & Parcel Map**. |
+| **NiLaM Citizen App** | `/citizen/` | **Citizens / Landholders**: Clean DigiLocker / TNEGA-inspired mobile app to track land cases, give consent, file objections, and view compensation. |
+| **NiLaM Field App** | `/field/` | **Field Verifiers**: Mobile surveyor tool with **live device camera corner photo capture**, **GPS geotagging (±accuracy)**, corner thumbnails, and **offline sync queue**. |
 
-Deep-links work for reviews and the screenshot harness: `/?as=lao`, `/?as=nhai`,
-`/?as=ramesh`, `/?as=lao&view=case`.
+### Four Core Roles & Demonstration Accounts
+
+Password for all accounts: **`nilam@2026`**
+
+| Role | Username | Person & Description | What they do in NiLaM |
+| --- | --- | --- | --- |
+| **1. Government** | `nhai` | Shri Sudhir Nagpure (NHAI) | Project oversight, GIS corridor mapping, budget disbursement & delay projections |
+| **2. Officers** | `lao`<br>`registrar`<br>`collector`<br>`treasury` | Shri Prakash Deshmukh (LAO)<br>Smt. Kavita Meshram (Sub-Registrar)<br>Dr. Anjali Bhosale, IAS (Collector)<br>Shri Gajanan Tandulkar (Treasury) | Scrutiny queues, statutory stage transitions, awards approval, clearance checks, and payment release |
+| **3. Citizens** | `citizen1`<br>`sunita`<br>`ramesh` | Sunita Ramesh Gaikwad<br>Landholders | Track land status, plain-language legal explainers, digital consent/objection, compensation breakdown |
+| **4. Field Verifiers** | `surveyor1`<br>`surveyor2` | Amit Patil<br>Pradeep Ingle | On-ground demarcation with device camera corner photos, GPS coordinate tagging, and offline sync |
+| *Auditor* | `auditor` | Shri Mohan Khedkar (Audit & Vigilance) | Read-only SHA-256 hash-chained immutable audit ledger |
+
+Deep-links work for instant access:
+- Dashboard: `http://127.0.0.1:4181/?as=nhai` or `/?as=lao`
+- GIS Corridor Map: `http://127.0.0.1:4181/?as=nhai&view=map`
+- Citizen Mobile App: `http://127.0.0.1:4181/citizen/`
+- Field Verifier Mobile App: `http://127.0.0.1:4181/field/`
 
 ---
 

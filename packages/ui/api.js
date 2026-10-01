@@ -103,6 +103,7 @@ export const api = {
 
   /* Government */
   overview: () => request('GET', '/api/government/overview'),
+  mapParcels: () => request('GET', '/api/map/parcels'),
 
   /* Notifications and audit */
   notifications: () => request('GET', '/api/notifications'),

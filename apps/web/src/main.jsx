@@ -6,7 +6,7 @@
  * see different queues and different MIS summaries.
  */
 
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   Icon, StatusChip, SlaChip, RiskChip, SeverityChip, Button, Card, Field, Input, Textarea,
@@ -35,7 +35,9 @@ const DEMO_ACCOUNTS = [
   { username: 'registrar', label: 'Sub-Registrar', who: 'Smt. Kavita Meshram', hint: 'Purchase-track scrutiny' },
   { username: 'collector', label: 'Collector', who: 'Dr. Anjali Bhosale, IAS', hint: 'Approvals, disputes, at-risk cases' },
   { username: 'treasury', label: 'Treasury Officer', who: 'Shri Gajanan Tandulkar', hint: 'Payments due and failed' },
-  { username: 'nhai', label: 'Government / NHAI', who: 'Shri Sudhir Nagpure', hint: 'Project progress and projected delays' },
+  { username: 'nhai', label: 'Government / NHAI', who: 'Shri Sudhir Nagpure', hint: 'Project progress and corridor map' },
+  { username: 'citizen1', label: 'Citizen / Landholder', who: 'Sunita Ramesh Gaikwad', hint: 'DigiLocker portal, consent, awards' },
+  { username: 'surveyor1', label: 'Field Verifier', who: 'Amit Patil', hint: 'GPS corner capture & verification' },
   { username: 'auditor', label: 'Audit & Vigilance', who: 'Shri Mohan Khedkar', hint: 'Read-only ledger and case access' }
 ];
 
@@ -119,6 +121,22 @@ function Login({ onSignedIn, meta }) {
                 <span aria-hidden="true" style={{ color: 'var(--ink-300)' }}><Icon.chevron /></span>
               </button>
             ))}
+          </div>
+        </div>
+
+        <div style={{ marginTop: 'var(--s4)', padding: '14px', background: '#f0f5fc', borderRadius: '8px', border: '1px solid #c7d9f2' }}>
+          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--blue-700)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span>📱</span> Mobile-First Dedicated Portals
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <a href="/citizen/" target="_blank" rel="noreferrer" style={{ textDecoration: 'none', padding: '10px', background: '#ffffff', borderRadius: '6px', border: '1px solid var(--line)', display: 'flex', flexDirection: 'column', gap: '2px', color: 'inherit' }}>
+              <strong style={{ fontSize: '12px', color: 'var(--blue-700)' }}>🏛️ Citizen Portal</strong>
+              <span style={{ fontSize: '11px', color: 'var(--ink-500)' }}>DigiLocker UI, consent & compensation</span>
+            </a>
+            <a href="/field/" target="_blank" rel="noreferrer" style={{ textDecoration: 'none', padding: '10px', background: '#ffffff', borderRadius: '6px', border: '1px solid var(--line)', display: 'flex', flexDirection: 'column', gap: '2px', color: 'inherit' }}>
+              <strong style={{ fontSize: '12px', color: 'var(--blue-700)' }}>📍 Field Verifier App</strong>
+              <span style={{ fontSize: '11px', color: 'var(--ink-500)' }}>Camera capture & GPS geotagging</span>
+            </a>
           </div>
         </div>
 
@@ -783,6 +801,412 @@ function OverviewView({ onOpen }) {
 }
 
 /* ------------------------------------------------------------------ *
+ * Project Corridor GIS & Cadastral Map View
+ * ------------------------------------------------------------------ */
+
+function ProjectMapView({ onOpen }) {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  const [selectedParcel, setSelectedParcel] = useState(null);
+  const [hoveredParcel, setHoveredParcel] = useState(null);
+  const [filterVillage, setFilterVillage] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    api.mapParcels()
+      .then(setData)
+      .catch((err) => setError(err.message));
+  }, []);
+
+  const filteredFeatures = useMemo(() => {
+    if (!data?.features) return [];
+    return data.features.filter((f) => {
+      const p = f.properties;
+      if (filterVillage !== 'all' && p.village !== filterVillage) return false;
+      if (filterStatus === 'surveyed' && p.captureCount === 0) return false;
+      if (filterStatus === 'pending' && p.captureCount > 0) return false;
+      if (filterStatus === 'discrepancy' && p.discrepancyCount === 0) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const match = (p.surveyNo && p.surveyNo.toLowerCase().includes(q)) ||
+                      (p.caseNo && p.caseNo.toLowerCase().includes(q)) ||
+                      (p.ownerName && p.ownerName.toLowerCase().includes(q));
+        if (!match) return false;
+      }
+      return true;
+    });
+  }, [data, filterVillage, filterStatus, searchQuery]);
+
+  const villages = useMemo(() => {
+    if (!data?.features) return [];
+    const set = new Set();
+    data.features.forEach((f) => { if (f.properties?.village) set.add(f.properties.village); });
+    return Array.from(set).sort();
+  }, [data]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !data?.features?.length) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.max(1, Math.floor(rect.width));
+    const h = Math.max(1, Math.floor(rect.height));
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+
+    // Background cadastre grid
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 1;
+    const gridSize = 40;
+    for (let x = 0; x < w; x += gridSize) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+    }
+    for (let y = 0; y < h; y += gridSize) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+    }
+
+    const allCoords = [];
+    data.features.forEach((f) => {
+      const geom = f.geometry;
+      if (!geom) return;
+      const rings = geom.type === 'MultiPolygon' ? geom.coordinates.flat() : geom.coordinates;
+      rings.forEach((ring) => {
+        if (Array.isArray(ring)) {
+          ring.forEach((pt) => { if (Array.isArray(pt) && Number.isFinite(pt[0])) allCoords.push(pt); });
+        }
+      });
+    });
+
+    if (!allCoords.length) return;
+
+    const xs = allCoords.map((p) => p[0]);
+    const ys = allCoords.map((p) => p[1]);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    const spanX = Math.max(1e-7, maxX - minX);
+    const spanY = Math.max(1e-7, maxY - minY);
+    const pad = 48;
+    const baseScale = Math.min((w - pad * 2) / spanX, (h - pad * 2) / spanY);
+    const scale = baseScale * zoom;
+    const offX = (w - spanX * scale) / 2 + pan.x;
+    const offY = (h - spanY * scale) / 2 + pan.y;
+
+    const project = ([lon, lat]) => [offX + (lon - minX) * scale, h - (offY + (lat - minY) * scale)];
+
+    data.features.forEach((f) => {
+      const geom = f.geometry;
+      const p = f.properties;
+      if (!geom) return;
+      const isSelected = selectedParcel?.id === f.id;
+      const isHovered = hoveredParcel?.id === f.id;
+      const isFiltered = filteredFeatures.some((ff) => ff.id === f.id);
+
+      const rings = geom.type === 'MultiPolygon' ? geom.coordinates.flat() : geom.coordinates;
+
+      rings.forEach((ring) => {
+        if (!Array.isArray(ring) || ring.length < 3) return;
+        ctx.beginPath();
+        ring.forEach((c, i) => {
+          const [px, py] = project(c);
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        });
+        ctx.closePath();
+
+        if (!isFiltered) {
+          ctx.fillStyle = '#f1f5f9';
+          ctx.strokeStyle = '#cbd5e1';
+          ctx.lineWidth = 1;
+        } else if (isSelected) {
+          ctx.fillStyle = '#bfdbfe';
+          ctx.strokeStyle = '#1d4ed8';
+          ctx.lineWidth = 3;
+        } else if (isHovered) {
+          ctx.fillStyle = '#dbeafe';
+          ctx.strokeStyle = '#2563eb';
+          ctx.lineWidth = 2;
+        } else if (p.discrepancyCount > 0) {
+          ctx.fillStyle = '#fee2e2';
+          ctx.strokeStyle = '#dc2626';
+          ctx.lineWidth = 2;
+        } else if (p.stage === 'POSSESSION_TAKEN') {
+          ctx.fillStyle = '#dcfce7';
+          ctx.strokeStyle = '#15803d';
+          ctx.lineWidth = 1.5;
+        } else if (p.captureCount > 0) {
+          ctx.fillStyle = '#e0f2fe';
+          ctx.strokeStyle = '#0284c7';
+          ctx.lineWidth = 1.5;
+        } else {
+          ctx.fillStyle = '#fef3c7';
+          ctx.strokeStyle = '#d97706';
+          ctx.lineWidth = 1.5;
+        }
+
+        ctx.fill();
+        ctx.stroke();
+
+        if (p.centroid && Array.isArray(p.centroid.coordinates) && isFiltered) {
+          const [lx, ly] = project(p.centroid.coordinates);
+          ctx.fillStyle = isSelected ? '#1e3a8a' : (p.discrepancyCount > 0 ? '#991b1b' : '#334155');
+          ctx.font = isSelected ? 'bold 12px "Noto Sans", sans-serif' : '11px "Noto Sans", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`Sy. ${p.surveyNo}`, lx, ly);
+          if (zoom >= 1.5 && p.ownerName) {
+            ctx.font = '9px "Noto Sans", sans-serif';
+            ctx.fillStyle = '#64748b';
+            ctx.fillText(p.ownerName.slice(0, 16), lx, ly + 14);
+          }
+        }
+      });
+    });
+  }, [data, filteredFeatures, selectedParcel, hoveredParcel, zoom, pan]);
+
+  const handleCanvasClick = (e) => {
+    const canvas = canvasRef.current;
+    if (!canvas || !data?.features?.length) return;
+    const rect = canvas.getBoundingClientRect();
+    const cx = e.clientX - rect.left;
+    const cy = e.clientY - rect.top;
+
+    const w = rect.width;
+    const h = rect.height;
+    const allCoords = [];
+    data.features.forEach((f) => {
+      const geom = f.geometry;
+      if (!geom) return;
+      const rings = geom.type === 'MultiPolygon' ? geom.coordinates.flat() : geom.coordinates;
+      rings.forEach((ring) => {
+        if (Array.isArray(ring)) {
+          ring.forEach((pt) => { if (Array.isArray(pt) && Number.isFinite(pt[0])) allCoords.push(pt); });
+        }
+      });
+    });
+
+    if (!allCoords.length) return;
+    const xs = allCoords.map((p) => p[0]);
+    const ys = allCoords.map((p) => p[1]);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    const spanX = Math.max(1e-7, maxX - minX);
+    const spanY = Math.max(1e-7, maxY - minY);
+    const pad = 48;
+    const baseScale = Math.min((w - pad * 2) / spanX, (h - pad * 2) / spanY);
+    const scale = baseScale * zoom;
+    const offX = (w - spanX * scale) / 2 + pan.x;
+    const offY = (h - spanY * scale) / 2 + pan.y;
+
+    const lon = (cx - offX) / scale + minX;
+    const lat = ((h - cy) - offY) / scale + minY;
+
+    let hit = null;
+    for (const f of data.features) {
+      const geom = f.geometry;
+      if (!geom) continue;
+      const rings = geom.type === 'MultiPolygon' ? geom.coordinates.flat() : geom.coordinates;
+      for (const ring of rings) {
+        if (pointInPolygon([lon, lat], ring)) {
+          hit = f;
+          break;
+        }
+      }
+      if (hit) break;
+    }
+    setSelectedParcel(hit ? { id: hit.id, ...hit.properties } : null);
+  };
+
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+  };
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    setPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+  };
+  const handleMouseUp = () => setIsDragging(false);
+
+  const resetView = () => { setZoom(1); setPan({ x: 0, y: 0 }); };
+
+  if (error) return <Alert tone="err" title="Could not load corridor GIS map">{error}</Alert>;
+  if (!data) return <div className="nilam-stack"><Skeleton height={140} /><Skeleton height={380} /></div>;
+
+  const totalArea = data.features.reduce((s, f) => s + (f.properties?.recordAreaHectares || 0), 0);
+  const surveyedCount = data.features.filter((f) => f.properties?.captureCount > 0).length;
+  const discrepancyCount = data.features.filter((f) => f.properties?.discrepancyCount > 0).length;
+
+  return (
+    <div className="nilam-stack">
+      <PageHeader
+        title="Project Corridor GIS & Cadastral Map"
+        subtitle="Geospatial demarcation of highway alignment parcels with real-time field survey & discrepancy tracking."
+        actions={
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Button onClick={resetView}>Reset View</Button>
+            <a href="/field/" target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
+              <Button variant="primary">📸 Open Field Verifier</Button>
+            </a>
+          </div>
+        }
+      />
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+        <Card><Metric label="Corridor parcels" value={data.features.length} detail="Aligned plots on RoR" /></Card>
+        <Card><Metric label="Total area" value={`${totalArea.toFixed(2)} ha`} detail="Acquisition corridor" /></Card>
+        <Card><Metric label="Field surveyed" value={`${surveyedCount} / ${data.features.length}`} detail="Geotagged with camera & GPS" /></Card>
+        <Card><Metric label="Discrepancies" value={discrepancyCount} detail={discrepancyCount > 0 ? "Requires scrutiny" : "Clean verification"} /></Card>
+      </div>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', background: '#fff', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--line)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink-700)' }}>Village:</span>
+          <select value={filterVillage} onChange={(e) => setFilterVillage(e.target.value)} style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--line)', fontSize: '13px' }}>
+            <option value="all">All Villages ({villages.length})</option>
+            {villages.map((v) => <option key={v} value={v}>{v}</option>)}
+          </select>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink-700)' }}>Status:</span>
+          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--line)', fontSize: '13px' }}>
+            <option value="all">All Statuses</option>
+            <option value="surveyed">Field Surveyed (Corners geotagged)</option>
+            <option value="pending">Pending Field Survey</option>
+            <option value="discrepancy">Discrepancy Flagged</option>
+          </select>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+          <Input placeholder="Search Survey No, Case No, or Owner…" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+        </div>
+
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          <Button size="sm" onClick={() => setZoom((z) => Math.min(4, z + 0.3))}>＋</Button>
+          <Button size="sm" onClick={() => setZoom((z) => Math.max(0.6, z - 0.3))}>－</Button>
+          <span style={{ fontSize: '12px', color: 'var(--ink-500)', minWidth: '40px', textAlign: 'center' }}>{Math.round(zoom * 100)}%</span>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: selectedParcel ? '2fr 1fr' : '1fr', gap: '16px', minHeight: '480px' }}>
+        <div style={{ position: 'relative', background: '#f8fafc', borderRadius: '8px', border: '1px solid var(--line)', overflow: 'hidden' }}>
+          <canvas
+            ref={canvasRef}
+            style={{ width: '100%', height: '520px', display: 'block', cursor: isDragging ? 'grabbing' : 'crosshair' }}
+            onClick={handleCanvasClick}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+          />
+
+          <div style={{ position: 'absolute', bottom: '12px', left: '12px', background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(4px)', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d5dce4', fontSize: '11px', display: 'flex', flexDirection: 'column', gap: '4px', boxShadow: '0 2px 6px rgba(0,0,0,0.06)' }}>
+            <strong style={{ color: 'var(--ink-900)' }}>Corridor Legend</strong>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ width: 12, height: 12, background: '#dcfce7', border: '1.5px solid #15803d', borderRadius: 2 }} /> Possession Taken</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ width: 12, height: 12, background: '#e0f2fe', border: '1.5px solid #0284c7', borderRadius: 2 }} /> Field Demarcated (GPS)</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ width: 12, height: 12, background: '#fef3c7', border: '1.5px solid #d97706', borderRadius: 2 }} /> Survey Scheduled</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ width: 12, height: 12, background: '#fee2e2', border: '1.5px solid #dc2626', borderRadius: 2 }} /> Discrepancy Flagged</span>
+          </div>
+
+          <div style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(255,255,255,0.92)', padding: '6px 10px', borderRadius: '6px', fontSize: '11px', color: 'var(--ink-500)', border: '1px solid #d5dce4' }}>
+            Showing {filteredFeatures.length} of {data.features.length} parcels · Click any parcel to inspect
+          </div>
+        </div>
+
+        {selectedParcel && (
+          <Card
+            title={`Survey No. ${selectedParcel.surveyNo}`}
+            actions={<Button size="sm" variant="quiet" onClick={() => setSelectedParcel(null)}>✕</Button>}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <span style={{ fontSize: '11px', color: 'var(--ink-500)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Landholder</span>
+                <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--ink-900)' }}>{selectedParcel.ownerName || '—'}</div>
+                <div style={{ fontSize: '12px', color: 'var(--ink-500)' }}>{selectedParcel.village}, {selectedParcel.taluka}</div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', padding: '10px', background: '#f8fafc', borderRadius: '6px' }}>
+                <div>
+                  <div style={{ fontSize: '11px', color: 'var(--ink-500)' }}>Record Area</div>
+                  <div style={{ fontSize: '14px', fontWeight: 700 }}>{selectedParcel.recordAreaHectares?.toFixed(4)} ha</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '11px', color: 'var(--ink-500)' }}>Land Class</div>
+                  <div style={{ fontSize: '14px', fontWeight: 600, textTransform: 'capitalize' }}>{selectedParcel.landClass}</div>
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: '11px', color: 'var(--ink-500)' }}>Acquisition Stage</div>
+                <div style={{ marginTop: '4px' }}>
+                  <StatusChip tone={selectedParcel.stage === 'POSSESSION_TAKEN' ? 'ok' : 'info'}>
+                    {selectedParcel.stage?.replace(/_/g, ' ')}
+                  </StatusChip>
+                </div>
+              </div>
+
+              {selectedParcel.discrepancyCount > 0 ? (
+                <Alert tone="err" title="Survey Discrepancy Detected">
+                  Ground GPS demarcation disagrees with RoR record area beyond statutory tolerance. Requires LAO scrutiny.
+                </Alert>
+              ) : selectedParcel.captureCount > 0 ? (
+                <Alert tone="ok" title="Boundary Verified">
+                  {selectedParcel.captureCount} field survey corner{selectedParcel.captureCount > 1 ? 's' : ''} captured with device camera & GPS geotags.
+                </Alert>
+              ) : (
+                <Alert tone="warn" title="Field Survey Pending">
+                  Assigned to field surveyor. Boundary corners must be geotagged in the field app.
+                </Alert>
+              )}
+
+              {selectedParcel.compensationINR && (
+                <div>
+                  <div style={{ fontSize: '11px', color: 'var(--ink-500)' }}>Determined Award</div>
+                  <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--ink-900)' }}>{rupees(selectedParcel.compensationINR)}</div>
+                </div>
+              )}
+
+              {selectedParcel.caseId && (
+                <Button variant="primary" block onClick={() => onOpen(selectedParcel.caseId)}>
+                  Open Case File ({selectedParcel.caseNo}) →
+                </Button>
+              )}
+            </div>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function pointInPolygon([px, py], ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const xi = ring[i][0], yi = ring[i][1];
+    const xj = ring[j][0], yj = ring[j][1];
+    const intersect = ((yi > py) !== (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+/* ------------------------------------------------------------------ *
  * Citizen view
  *
  * Deliberately not the officer view with fields hidden: a landholder needs plain
@@ -830,7 +1254,14 @@ function CitizenView({ onOpen, toast, onRefresh }) {
       <PageHeader
         title="Your land"
         subtitle="Each case shows where it has reached, what it means for you, and anything we need from you."
-        actions={<Button onClick={load}>Refresh</Button>}
+        actions={
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <a href="/citizen/" target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
+              <Button variant="primary">📱 Launch DigiLocker Citizen App</Button>
+            </a>
+            <Button onClick={load}>Refresh</Button>
+          </div>
+        }
       />
 
       {cases.map((c) => (
@@ -917,6 +1348,11 @@ function FieldView({ toast }) {
       />
       <Alert tone="info" title="Capture happens in the field app">
         This is the web dashboard. Corner capture, offline queueing and sync run in the NiLaM Field application.
+        <div style={{ marginTop: 'var(--s3)' }}>
+          <a href="/field/" target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
+            <Button variant="primary" size="sm">📸 Launch Field Verifier Mobile App (Camera + GPS)</Button>
+          </a>
+        </div>
       </Alert>
       {data.assignments.length === 0 ? (
         <Empty title="Nothing assigned to you">New survey assignments will appear here.</Empty>
@@ -1157,6 +1593,9 @@ export default function App() {
     if (user.role === 'government') {
       items.push({ id: 'overview', label: 'Project overview', icon: Icon.chart });
     }
+    if (['government', 'officer', 'auditor'].includes(user.role)) {
+      items.push({ id: 'map', label: 'GIS & Parcel Map', icon: Icon.map });
+    }
     if (user.role === 'citizen') {
       items.push({ id: 'myland', label: 'My land', icon: Icon.home });
     }
@@ -1216,6 +1655,7 @@ export default function App() {
             {view === 'queue' && <QueueView onOpen={openCase} toast={push} />}
             {view === 'case' && <CaseView caseId={caseId} onBack={() => setView('queue')} toast={push} refreshQueue={refreshQueue} />}
             {view === 'overview' && <OverviewView onOpen={openCase} />}
+            {view === 'map' && <ProjectMapView onOpen={openCase} />}
             {view === 'myland' && <CitizenView onOpen={openCase} toast={push} />}
             {view === 'field' && <FieldView toast={push} />}
             {view === 'audit' && <AuditView toast={push} />}
