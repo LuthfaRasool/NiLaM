@@ -1,0 +1,55 @@
+# NiLaM deployment shape.
+#
+# This is the target for a machine that actually has PostgreSQL + PostGIS and can
+# pull images. It is NOT runnable in the offline sandbox where the prototype was
+# built — there is no Docker and no Postgres binary there. The runnable path in
+# that environment is node:sqlite, as the README explains.
+#
+#   docker compose up --build
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: nilam
+      POSTGRES_USER: nilam
+      POSTGRES_PASSWORD: nilam
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nilam -d nilam"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - nilam_pgdata:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NILAM_DB: postgres
+      PGHOST: db
+      PGPORT: "5432"
+      PGDATABASE: nilam
+      PGUSER: nilam
+      PGPASSWORD: nilam
+      NILAM_MODE: demo
+      NILAM_PORT: "4180"
+    ports:
+      - "4180:4180"
+
+  # A minimal reverse proxy so the headers a <meta> cannot set are actually set.
+  proxy:
+    image: nginx:1.27-alpine
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+    volumes:
+      - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+volumes:
+  nilam_pgdata:

@@ -1,0 +1,32 @@
+{
+  "name": "nilam",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NiLaM - National Integrated Land acquisition Module. SIH26016. Team CLANS.",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "install:offline": "node tools/offline-install.mjs install .",
+    "db:migrate": "node db/migrate.mjs",
+    "db:seed": "node db/seed.mjs",
+    "api": "node services/api/server.mjs",
+    "build:web": "node tools/build-web.mjs",
+    "ml:train": "python services/ml/train.py",
+    "ml:serve": "python services/ml/serve.py",
+    "dev": "node tools/dev.mjs",
+    "test": "node tests/run.mjs",
+    "shots": "node tools/screenshots.mjs",
+    "verify": "node tools/verify.mjs"
+  },
+  "dependencies": {
+    "express": "4.22.2",
+    "cors": "2.8.6",
+    "pg": "8.23.0",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "esbuild": "0.25.12"
+  }
+}

@@ -1,0 +1,854 @@
+/*
+ * NiLaM design tokens.
+ *
+ * Direction: a calm, plain Indian government service. Not a startup dashboard.
+ * No gradients, no glassmorphism, no neon, no emoji as UI.
+ *
+ * Two rules are structural rather than stylistic, and the tests check both:
+ *   - status is never conveyed by colour alone (always colour + icon + word)
+ *   - mobile body text is never below 16px
+ */
+
+:root {
+  /* Ink */
+  --ink-900: #10151c;
+  --ink-700: #333e4d;
+  --ink-500: #5b6878;
+  --ink-300: #8b98a8;
+
+  /* Surfaces and lines */
+  --line: #d5dce4;
+  --line-2: #e8edf2;
+  --bg: #ffffff;
+  --bg-2: #f5f7fa;
+  --bg-3: #eef2f6;
+
+  /* The tricolour, used once, as a 3px strip at the top of the app. */
+  --saffron: #ff9933;
+  --white: #ffffff;
+  --green: #138808;
+
+  /* Institutional blue: primary actions, links, active navigation. */
+  --blue-700: #0b3d79;
+  --blue-600: #10559f;
+  --blue-100: #e8f0fa;
+
+  /* Status. Always paired with an icon and a word. */
+  --ok-700: #166534;
+  --ok-100: #e7f5ec;
+  --warn-700: #92400e;
+  --warn-100: #fdf3e3;
+  --err-700: #a4262c;
+  --err-100: #fdecec;
+  --info-700: #10559f;
+  --info-100: #e8f0fa;
+  --idle-700: #475569;
+  --idle-100: #eef2f6;
+
+  /* Type. Bilingual-ready: Latin, Devanagari, then the system stack. */
+  --font: "Noto Sans", "Noto Sans Devanagari", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-num: "Cascadia Mono", "Consolas", ui-monospace, monospace;
+
+  --size-xs: 12px;
+  --size-sm: 14px;
+  --size-md: 16px;
+  --size-lg: 20px;
+  --size-xl: 24px;
+  --size-2xl: 32px;
+
+  /* Spacing: a 4px base on an 8px rhythm. */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 20px;
+  --s6: 24px;
+  --s8: 32px;
+  --s10: 40px;
+  --s12: 48px;
+  --s16: 64px;
+
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-pill: 999px;
+
+  /* Two elevations only, both subtle. */
+  --e1: 0 1px 2px rgba(16, 21, 28, 0.06);
+  --e2: 0 4px 14px rgba(16, 21, 28, 0.1);
+
+  --dur: 120ms;
+  --dur-slow: 200ms;
+
+  --header-h: 56px;
+  --tabbar-h: 60px;
+  --nav-w: 236px;
+}
+
+/* ------------------------------------------------------------------ *
+ * Reset
+ * ------------------------------------------------------------------ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: var(--font);
+  font-size: var(--size-md);
+  line-height: 1.5;
+  color: var(--ink-700);
+  background: var(--bg-2);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100%;
+}
+
+h1, h2, h3, h4 {
+  margin: 0;
+  color: var(--ink-900);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+h1 { font-size: var(--size-xl); }
+h2 { font-size: var(--size-lg); }
+h3 { font-size: var(--size-md); }
+h4 { font-size: var(--size-sm); }
+
+p { margin: 0 0 var(--s3); }
+p:last-child { margin-bottom: 0; }
+
+a { color: var(--blue-600); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+/* An always-visible focus ring. Never removed. */
+:focus-visible {
+  outline: 2px solid var(--blue-600);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+.nilam-skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--bg);
+  padding: var(--s3) var(--s4);
+  z-index: 100;
+}
+.nilam-skip:focus { left: var(--s4); top: var(--s4); }
+
+/* ------------------------------------------------------------------ *
+ * App shell
+ * ------------------------------------------------------------------ */
+
+.nilam-app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* The tricolour strip. 3px, once, at the very top of the product. */
+.nilam-strip {
+  height: 3px;
+  flex: 0 0 3px;
+  background: linear-gradient(
+    to right,
+    var(--saffron) 0 33.33%,
+    var(--white) 33.33% 66.66%,
+    var(--green) 66.66% 100%
+  );
+}
+
+.nilam-header {
+  flex: 0 0 auto;
+  height: var(--header-h);
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  padding: 0 var(--s5);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.nilam-brand {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s2);
+  flex: 0 0 auto;
+}
+
+.nilam-brand__mark {
+  font-size: var(--size-lg);
+  font-weight: 600;
+  color: var(--blue-700);
+  letter-spacing: -0.01em;
+}
+
+.nilam-brand__sub {
+  font-size: var(--size-xs);
+  color: var(--ink-500);
+}
+
+.nilam-header__spacer { flex: 1 1 auto; }
+
+.nilam-header__user {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  font-size: var(--size-sm);
+}
+
+.nilam-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-pill);
+  background: var(--blue-100);
+  color: var(--blue-700);
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  font-size: var(--size-sm);
+  flex: 0 0 auto;
+}
+
+.nilam-body {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+}
+
+.nilam-nav {
+  flex: 0 0 var(--nav-w);
+  background: var(--bg);
+  border-right: 1px solid var(--line);
+  padding: var(--s4) var(--s3);
+  overflow-y: auto;
+}
+
+.nilam-nav__group {
+  font-size: var(--size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-300);
+  padding: var(--s3) var(--s3) var(--s2);
+}
+
+.nilam-nav__item {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  width: 100%;
+  padding: var(--s3);
+  border: 0;
+  background: none;
+  border-radius: var(--r-md);
+  text-align: left;
+  cursor: pointer;
+  color: var(--ink-700);
+  font-size: var(--size-sm);
+}
+.nilam-nav__item:hover { background: var(--bg-3); }
+.nilam-nav__item--active {
+  background: var(--blue-100);
+  color: var(--blue-700);
+  font-weight: 600;
+}
+.nilam-nav__count {
+  margin-left: auto;
+  font-size: var(--size-xs);
+  background: var(--bg-3);
+  color: var(--ink-500);
+  border-radius: var(--r-pill);
+  padding: 1px var(--s2);
+}
+.nilam-nav__item--active .nilam-nav__count { background: var(--bg); color: var(--blue-700); }
+
+.nilam-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: var(--s6);
+  overflow-y: auto;
+}
+
+.nilam-page { max-width: 1280px; margin: 0 auto; }
+
+.nilam-page__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s4);
+  margin-bottom: var(--s5);
+  flex-wrap: wrap;
+}
+.nilam-page__head-main { flex: 1 1 320px; min-width: 0; }
+.nilam-page__crumb {
+  font-size: var(--size-xs);
+  color: var(--ink-500);
+  margin-bottom: var(--s1);
+}
+.nilam-page__actions { display: flex; gap: var(--s2); flex-wrap: wrap; }
+
+/* ------------------------------------------------------------------ *
+ * Cards and layout
+ * ------------------------------------------------------------------ */
+
+.nilam-card {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: var(--e1);
+}
+.nilam-card__head {
+  padding: var(--s4) var(--s5);
+  border-bottom: 1px solid var(--line-2);
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+.nilam-card__head h2, .nilam-card__head h3 { flex: 1 1 auto; min-width: 0; }
+.nilam-card__body { padding: var(--s5); }
+.nilam-card__foot {
+  padding: var(--s3) var(--s5);
+  border-top: 1px solid var(--line-2);
+  background: var(--bg-2);
+  border-radius: 0 0 var(--r-md) var(--r-md);
+  font-size: var(--size-sm);
+  color: var(--ink-500);
+}
+
+.nilam-grid { display: grid; gap: var(--s4); }
+.nilam-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.nilam-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.nilam-grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.nilam-grid--sidebar { grid-template-columns: minmax(0, 1fr) 340px; }
+.nilam-grid--wide { grid-template-columns: 380px minmax(0, 1fr); }
+
+@media (max-width: 1100px) {
+  .nilam-grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .nilam-grid--sidebar, .nilam-grid--wide { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+  .nilam-grid--2, .nilam-grid--3, .nilam-grid--4 { grid-template-columns: minmax(0, 1fr); }
+}
+
+.nilam-stack { display: flex; flex-direction: column; gap: var(--s4); }
+.nilam-row { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; }
+.nilam-row--between { justify-content: space-between; }
+
+/* ------------------------------------------------------------------ *
+ * Metrics
+ * ------------------------------------------------------------------ */
+
+.nilam-metric { padding: var(--s5); }
+.nilam-metric__label {
+  font-size: var(--size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-500);
+  margin-bottom: var(--s2);
+}
+.nilam-metric__value {
+  font-size: var(--size-2xl);
+  font-weight: 600;
+  color: var(--ink-900);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.nilam-metric__value--warn { color: var(--warn-700); }
+.nilam-metric__value--err { color: var(--err-700); }
+.nilam-metric__value--ok { color: var(--ok-700); }
+.nilam-metric__foot { font-size: var(--size-xs); color: var(--ink-500); margin-top: var(--s2); }
+
+/* ------------------------------------------------------------------ *
+ * Status chips: colour + icon + word, never colour alone
+ * ------------------------------------------------------------------ */
+
+.nilam-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: 2px var(--s3) 2px var(--s2);
+  border-radius: var(--r-pill);
+  font-size: var(--size-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+.nilam-chip__icon { flex: 0 0 auto; display: grid; place-items: center; }
+
+.nilam-chip--ok { background: var(--ok-100); color: var(--ok-700); border-color: #cbe7d6; }
+.nilam-chip--warn { background: var(--warn-100); color: var(--warn-700); border-color: #f3ddb9; }
+.nilam-chip--err { background: var(--err-100); color: var(--err-700); border-color: #f5cdcf; }
+.nilam-chip--info { background: var(--info-100); color: var(--info-700); border-color: #cfe0f5; }
+.nilam-chip--idle { background: var(--idle-100); color: var(--idle-700); border-color: var(--line); }
+
+/* ------------------------------------------------------------------ *
+ * Buttons
+ * ------------------------------------------------------------------ */
+
+.nilam-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  min-height: 40px;
+  padding: 0 var(--s4);
+  border-radius: var(--r-md);
+  border: 1px solid transparent;
+  font-size: var(--size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--dur) ease-out, border-color var(--dur) ease-out;
+  white-space: nowrap;
+}
+.nilam-btn:disabled { cursor: not-allowed; opacity: 0.55; }
+
+.nilam-btn--primary { background: var(--blue-600); color: #fff; }
+.nilam-btn--primary:hover:not(:disabled) { background: var(--blue-700); }
+
+.nilam-btn--secondary { background: var(--bg); color: var(--ink-900); border-color: var(--line); }
+.nilam-btn--secondary:hover:not(:disabled) { background: var(--bg-3); }
+
+.nilam-btn--quiet { background: none; color: var(--blue-600); padding: 0 var(--s2); min-height: 32px; }
+.nilam-btn--quiet:hover:not(:disabled) { background: var(--blue-100); }
+
+.nilam-btn--danger { background: var(--err-700); color: #fff; }
+.nilam-btn--danger:hover:not(:disabled) { background: #8d1f24; }
+
+.nilam-btn--block { width: 100%; }
+.nilam-btn--lg { min-height: 48px; font-size: var(--size-md); }
+
+/* ------------------------------------------------------------------ *
+ * Forms
+ * ------------------------------------------------------------------ */
+
+.nilam-field { display: flex; flex-direction: column; gap: var(--s2); margin-bottom: var(--s4); }
+.nilam-field__label { font-size: var(--size-sm); font-weight: 600; color: var(--ink-900); }
+.nilam-field__req { color: var(--err-700); margin-left: 2px; }
+.nilam-field__hint { font-size: var(--size-xs); color: var(--ink-500); }
+.nilam-field__error {
+  font-size: var(--size-xs);
+  color: var(--err-700);
+  display: flex;
+  gap: var(--s2);
+  align-items: flex-start;
+}
+
+.nilam-input, .nilam-select, .nilam-textarea {
+  width: 100%;
+  min-height: 40px;
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  font-size: var(--size-md);
+}
+.nilam-textarea { min-height: 92px; resize: vertical; line-height: 1.5; }
+.nilam-input:focus, .nilam-select:focus, .nilam-textarea:focus {
+  border-color: var(--blue-600);
+  outline: 2px solid var(--blue-100);
+  outline-offset: 0;
+}
+.nilam-input--invalid, .nilam-textarea--invalid { border-color: var(--err-700); }
+
+/* ------------------------------------------------------------------ *
+ * Tables
+ * ------------------------------------------------------------------ */
+
+.nilam-table-wrap { overflow-x: auto; }
+.nilam-table { width: 100%; border-collapse: collapse; font-size: var(--size-sm); }
+.nilam-table th {
+  text-align: left;
+  font-size: var(--size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--ink-500);
+  font-weight: 600;
+  padding: var(--s3) var(--s4);
+  background: var(--bg-3);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.nilam-table td {
+  padding: var(--s3) var(--s4);
+  border-bottom: 1px solid var(--line-2);
+  vertical-align: top;
+}
+.nilam-table tbody tr:hover { background: var(--bg-2); }
+.nilam-table tbody tr:last-child td { border-bottom: 0; }
+.nilam-table__num { font-variant-numeric: tabular-nums; text-align: right; }
+.nilam-table__case { font-weight: 600; color: var(--blue-600); cursor: pointer; }
+.nilam-table__case:hover { text-decoration: underline; }
+
+/* ------------------------------------------------------------------ *
+ * Timeline — one status tracker, used everywhere
+ * ------------------------------------------------------------------ */
+
+.nilam-timeline { display: flex; flex-direction: column; gap: 0; }
+.nilam-tl-item { display: flex; gap: var(--s3); min-height: 52px; }
+.nilam-tl-rail { flex: 0 0 22px; display: flex; flex-direction: column; align-items: center; }
+.nilam-tl-dot {
+  width: 20px; height: 20px; border-radius: var(--r-pill);
+  display: grid; place-items: center; flex: 0 0 auto;
+  border: 2px solid var(--line); background: var(--bg); color: var(--ink-300);
+  font-size: 11px; font-weight: 700;
+}
+.nilam-tl-dot--done { background: var(--ok-700); border-color: var(--ok-700); color: #fff; }
+.nilam-tl-dot--current { background: var(--blue-600); border-color: var(--blue-600); color: #fff; }
+.nilam-tl-line { flex: 1 1 auto; width: 2px; background: var(--line-2); }
+.nilam-tl-item:last-child .nilam-tl-line { display: none; }
+.nilam-tl-body { flex: 1 1 auto; padding-bottom: var(--s4); min-width: 0; }
+.nilam-tl-title { font-size: var(--size-sm); font-weight: 600; color: var(--ink-900); }
+.nilam-tl-title--muted { color: var(--ink-500); font-weight: 400; }
+.nilam-tl-desc { font-size: var(--size-sm); color: var(--ink-500); margin-top: var(--s1); }
+.nilam-tl-meta { font-size: var(--size-xs); color: var(--ink-300); margin-top: var(--s1); }
+
+/* ------------------------------------------------------------------ *
+ * Checklist
+ * ------------------------------------------------------------------ */
+
+.nilam-check { display: flex; gap: var(--s3); padding: var(--s3) 0; border-bottom: 1px solid var(--line-2); }
+.nilam-check:last-child { border-bottom: 0; }
+.nilam-check__mark {
+  flex: 0 0 auto; width: 20px; height: 20px; border-radius: var(--r-sm);
+  display: grid; place-items: center; font-size: 12px; font-weight: 700; margin-top: 1px;
+}
+.nilam-check__mark--clear { background: var(--ok-100); color: var(--ok-700); }
+.nilam-check__mark--block { background: var(--err-100); color: var(--err-700); }
+.nilam-check__mark--warn { background: var(--warn-100); color: var(--warn-700); }
+.nilam-check__body { flex: 1 1 auto; min-width: 0; }
+.nilam-check__label { font-size: var(--size-sm); font-weight: 600; color: var(--ink-900); }
+.nilam-check__q { font-size: var(--size-sm); color: var(--ink-500); }
+.nilam-check__action {
+  font-size: var(--size-sm); color: var(--warn-700); margin-top: var(--s1);
+  background: var(--warn-100); padding: var(--s2) var(--s3); border-radius: var(--r-sm);
+}
+
+/* ------------------------------------------------------------------ *
+ * Alerts, empty, skeleton
+ * ------------------------------------------------------------------ */
+
+.nilam-alert {
+  display: flex; gap: var(--s3); padding: var(--s3) var(--s4);
+  border-radius: var(--r-md); border: 1px solid; font-size: var(--size-sm);
+}
+.nilam-alert__icon { flex: 0 0 auto; margin-top: 1px; }
+.nilam-alert__body { flex: 1 1 auto; min-width: 0; }
+.nilam-alert__title { font-weight: 600; }
+.nilam-alert--err { background: var(--err-100); border-color: #f5cdcf; color: var(--err-700); }
+.nilam-alert--warn { background: var(--warn-100); border-color: #f3ddb9; color: var(--warn-700); }
+.nilam-alert--info { background: var(--info-100); border-color: #cfe0f5; color: var(--info-700); }
+.nilam-alert--ok { background: var(--ok-100); border-color: #cbe7d6; color: var(--ok-700); }
+.nilam-alert--demo {
+  background: #fbf7ee; border-color: #eadfc4; color: #6b5320;
+}
+
+.nilam-empty { text-align: center; padding: var(--s12) var(--s5); color: var(--ink-500); }
+.nilam-empty__title { font-size: var(--size-md); font-weight: 600; color: var(--ink-700); margin-bottom: var(--s2); }
+
+.nilam-skel {
+  background: linear-gradient(90deg, var(--bg-3) 25%, #e4e9ef 50%, var(--bg-3) 75%);
+  background-size: 200% 100%;
+  animation: nilam-skel 1.4s ease-in-out infinite;
+  border-radius: var(--r-sm);
+}
+@keyframes nilam-skel { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ------------------------------------------------------------------ *
+ * Key/value, progress, disclosure
+ * ------------------------------------------------------------------ */
+
+.nilam-kv { display: grid; grid-template-columns: 168px minmax(0, 1fr); gap: var(--s2) var(--s4); font-size: var(--size-sm); }
+.nilam-kv__k { color: var(--ink-500); }
+.nilam-kv__v { color: var(--ink-900); word-break: break-word; }
+@media (max-width: 640px) { .nilam-kv { grid-template-columns: minmax(0, 1fr); gap: var(--s1); } .nilam-kv__k { margin-top: var(--s2); } }
+
+.nilam-bar { height: 8px; background: var(--bg-3); border-radius: var(--r-pill); overflow: hidden; }
+.nilam-bar__fill { height: 100%; background: var(--blue-600); border-radius: var(--r-pill); transition: width var(--dur-slow) ease-out; }
+.nilam-bar__fill--warn { background: #d9821b; }
+.nilam-bar__fill--err { background: var(--err-700); }
+.nilam-bar__fill--ok { background: var(--ok-700); }
+
+.nilam-disclosure { border-top: 1px solid var(--line-2); }
+.nilam-disclosure__btn {
+  width: 100%; display: flex; align-items: center; gap: var(--s2);
+  padding: var(--s3) 0; background: none; border: 0; cursor: pointer;
+  font-size: var(--size-sm); font-weight: 600; color: var(--blue-600); text-align: left;
+}
+.nilam-disclosure__body { padding-bottom: var(--s4); }
+
+/* ------------------------------------------------------------------ *
+ * Case list (mobile-first card)
+ * ------------------------------------------------------------------ */
+
+.nilam-case {
+  background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-md);
+  padding: var(--s4); display: flex; flex-direction: column; gap: var(--s3);
+  box-shadow: var(--e1); cursor: pointer; text-align: left; width: 100%;
+  transition: border-color var(--dur) ease-out;
+}
+.nilam-case:hover { border-color: var(--blue-600); }
+.nilam-case__top { display: flex; align-items: flex-start; gap: var(--s3); }
+.nilam-case__id { flex: 1 1 auto; min-width: 0; }
+.nilam-case__no {
+  font-size: var(--size-sm); font-weight: 600; color: var(--blue-600);
+  word-break: break-word;
+}
+.nilam-case__where { font-size: var(--size-sm); color: var(--ink-500); }
+.nilam-case__meta { display: flex; gap: var(--s4); flex-wrap: wrap; font-size: var(--size-xs); color: var(--ink-500); }
+.nilam-case__chips { display: flex; gap: var(--s2); flex-wrap: wrap; }
+
+/* ------------------------------------------------------------------ *
+ * Map
+ * ------------------------------------------------------------------ */
+
+.nilam-map {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  min-height: 260px;
+  background: #eef2ee;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+.nilam-map canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.nilam-map__legend {
+  position: absolute; left: var(--s3); bottom: var(--s3);
+  background: rgba(255, 255, 255, 0.95); border: 1px solid var(--line);
+  border-radius: var(--r-sm); padding: var(--s2) var(--s3);
+  font-size: var(--size-xs); display: flex; flex-direction: column; gap: var(--s1);
+}
+.nilam-map__key { display: flex; align-items: center; gap: var(--s2); }
+.nilam-map__swatch { width: 14px; height: 10px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.25); }
+.nilam-map__hint {
+  position: absolute; right: var(--s3); top: var(--s3);
+  background: rgba(255,255,255,0.95); border: 1px solid var(--line);
+  border-radius: var(--r-sm); padding: var(--s1) var(--s2); font-size: var(--size-xs); color: var(--ink-500);
+}
+
+/* ------------------------------------------------------------------ *
+ * Mobile shell
+ * ------------------------------------------------------------------ */
+
+.nilam-phone {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: var(--e2);
+}
+@media (min-width: 480px) {
+  body.nilam-mobile-body { background: #dfe4ea; }
+  .nilam-phone { min-height: 100vh; }
+}
+
+.nilam-mobile-top {
+  flex: 0 0 auto;
+  position: sticky; top: 0; z-index: 20;
+  background: var(--blue-700); color: #fff;
+  padding: var(--s4) var(--s4) var(--s3);
+}
+.nilam-mobile-top__title { font-size: var(--size-lg); font-weight: 600; color: #fff; }
+.nilam-mobile-top__sub { font-size: var(--size-sm); opacity: 0.85; margin-top: var(--s1); }
+
+.nilam-mobile-content {
+  flex: 1 1 auto;
+  padding: var(--s4);
+  padding-bottom: calc(var(--tabbar-h) + var(--s6));
+  display: flex; flex-direction: column; gap: var(--s4);
+}
+
+.nilam-mobile-tabs {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 430px;
+  height: var(--tabbar-h);
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+  display: flex; z-index: 30;
+}
+.nilam-mobile-tab {
+  flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; border: 0; background: none; cursor: pointer;
+  font-size: 11px; color: var(--ink-500); padding: var(--s1) 0;
+}
+.nilam-mobile-tab--active { color: var(--blue-600); font-weight: 600; }
+.nilam-mobile-tab__icon { font-size: 18px; line-height: 1; }
+
+/* Mobile body text never drops below 16px. */
+.nilam-mobile-content { font-size: var(--size-md); }
+.nilam-mobile-content .nilam-case__where,
+.nilam-mobile-content .nilam-tl-desc,
+.nilam-mobile-content .nilam-check__q { font-size: var(--size-md); }
+
+.nilam-mobile-hero {
+  background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-md);
+  padding: var(--s4);
+}
+.nilam-mobile-hero__label { font-size: var(--size-sm); color: var(--ink-500); }
+.nilam-mobile-hero__value { font-size: var(--size-2xl); font-weight: 600; color: var(--ink-900); font-variant-numeric: tabular-nums; }
+
+/* Large touch targets on the phone. */
+.nilam-phone .nilam-btn { min-height: 48px; }
+.nilam-phone .nilam-nav__item, .nilam-phone .nilam-disclosure__btn { min-height: 48px; }
+
+/* ------------------------------------------------------------------ *
+ * Capture flow
+ * ------------------------------------------------------------------ */
+
+.nilam-corner-list { display: flex; flex-direction: column; gap: var(--s2); }
+.nilam-corner {
+  display: flex; align-items: center; gap: var(--s3);
+  padding: var(--s3); border: 1px solid var(--line); border-radius: var(--r-md);
+  background: var(--bg);
+}
+.nilam-corner--done { border-color: #cbe7d6; background: var(--ok-100); }
+.nilam-corner__idx {
+  flex: 0 0 30px; height: 30px; border-radius: var(--r-pill);
+  background: var(--bg-3); color: var(--ink-700);
+  display: grid; place-items: center; font-weight: 700; font-size: var(--size-sm);
+}
+.nilam-corner--done .nilam-corner__idx { background: var(--ok-700); color: #fff; }
+.nilam-corner__body { flex: 1 1 auto; min-width: 0; font-size: var(--size-sm); }
+.nilam-corner__coord { font-family: var(--font-num); font-size: var(--size-xs); color: var(--ink-500); }
+
+.nilam-big-action {
+  display: flex; flex-direction: column; align-items: center; gap: var(--s3);
+  padding: var(--s8) var(--s4); text-align: center;
+}
+.nilam-big-action__ring {
+  width: 112px; height: 112px; border-radius: var(--r-pill);
+  background: var(--blue-600); color: #fff; border: 0; cursor: pointer;
+  display: grid; place-items: center; font-size: var(--size-md); font-weight: 600;
+  box-shadow: var(--e2);
+}
+.nilam-big-action__ring:active { transform: scale(0.97); }
+.nilam-big-action__ring:disabled { background: var(--ink-300); }
+
+/* ------------------------------------------------------------------ *
+ * Toasts
+ * ------------------------------------------------------------------ */
+
+.nilam-toasts {
+  position: fixed; right: var(--s5); bottom: var(--s5); z-index: 60;
+  display: flex; flex-direction: column; gap: var(--s2); max-width: 380px;
+}
+.nilam-toast {
+  background: var(--ink-900); color: #fff; padding: var(--s3) var(--s4);
+  border-radius: var(--r-md); box-shadow: var(--e2); font-size: var(--size-sm);
+}
+.nilam-toast--err { background: var(--err-700); }
+.nilam-toast--ok { background: var(--ok-700); }
+
+/* ------------------------------------------------------------------ *
+ * Login
+ * ------------------------------------------------------------------ */
+
+.nilam-login {
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: var(--s6) var(--s4);
+}
+.nilam-login__card { width: 100%; max-width: 420px; }
+.nilam-login__brand { text-align: center; margin-bottom: var(--s6); }
+.nilam-login__mark { font-size: var(--size-2xl); font-weight: 600; color: var(--blue-700); }
+.nilam-login__sub { font-size: var(--size-sm); color: var(--ink-500); margin-top: var(--s1); }
+.nilam-login__accounts { display: flex; flex-direction: column; gap: var(--s2); }
+.nilam-login__account {
+  display: flex; align-items: center; gap: var(--s3); width: 100%;
+  padding: var(--s3); border: 1px solid var(--line); border-radius: var(--r-md);
+  background: var(--bg); cursor: pointer; text-align: left;
+}
+.nilam-login__account:hover { border-color: var(--blue-600); background: var(--blue-100); }
+.nilam-login__who { flex: 1 1 auto; min-width: 0; }
+/* These are spans, so they need to be told to stack. Without this the name and
+   the role run together on one line. */
+.nilam-login__name { display: block; font-size: var(--size-sm); font-weight: 600; color: var(--ink-900); }
+.nilam-login__role { display: block; font-size: var(--size-xs); color: var(--ink-500); margin-top: 2px; }
+
+/* ------------------------------------------------------------------ *
+ * Narrow viewports
+ *
+ * The dashboard is specified as a desktop product, but the brief still requires
+ * it to be rendered at 390px without breaking. A fixed 236px sidebar leaves
+ * roughly 130px of content at that width, which crushed the main column and
+ * pushed text off-screen. Below 820px the sidebar becomes a horizontal strip of
+ * tabs and the page padding tightens.
+ * ------------------------------------------------------------------ */
+
+@media (max-width: 820px) {
+  .nilam-header {
+    flex-wrap: wrap;
+    height: auto;
+    padding: var(--s3) var(--s4);
+    gap: var(--s3);
+  }
+  .nilam-brand__sub { display: none; }   /* the wordmark alone is enough here */
+  .nilam-body { flex-direction: column; }
+
+  .nilam-nav {
+    flex: 0 0 auto;
+    width: 100%;
+    display: flex;
+    gap: var(--s2);
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding: var(--s2) var(--s3);
+  }
+  .nilam-nav__group { display: none; }
+  .nilam-nav__item { width: auto; flex: 0 0 auto; white-space: nowrap; }
+
+  .nilam-main { padding: var(--s4); }
+  .nilam-page__head { margin-bottom: var(--s4); }
+
+  /* Tables scroll rather than being cut off. */
+  .nilam-table { min-width: 640px; }
+}
+
+/* The search box is a desktop affordance; on a phone it would take the whole
+   header. The mobile app has its own search entry point. */
+@media (max-width: 640px) {
+  .nilam-header > div[style*="flex: 1 1 340px"] { display: none; }
+}
+
+/* ------------------------------------------------------------------ *
+ * Reduced motion
+ * ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Print — case files get printed
+ * ------------------------------------------------------------------ */
+
+@media print {
+  .nilam-nav, .nilam-header, .nilam-mobile-tabs, .nilam-toasts { display: none !important; }
+  body { background: #fff; }
+  .nilam-card { box-shadow: none; break-inside: avoid; }
+}

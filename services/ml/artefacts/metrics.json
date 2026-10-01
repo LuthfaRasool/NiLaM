@@ -1,0 +1,463 @@
+{
+  "calm": {
+    "demonstration_uplifts": [
+      {
+        "because": "the parcel abuts a road, which raises realisable value",
+        "id": "road_frontage",
+        "label": "Road frontage",
+        "rate_percent": 7.0
+      },
+      {
+        "because": "the parcel is within two kilometres of an urban area",
+        "id": "near_town",
+        "label": "Proximity to a town",
+        "rate_percent": 5.0
+      },
+      {
+        "because": "assured irrigation supports a higher crop value",
+        "id": "irrigated",
+        "label": "Irrigated land",
+        "rate_percent": 4.5
+      }
+    ],
+    "land_class_factors": {
+      "agricultural": 1.0,
+      "barren": 0.7,
+      "commercial": 2.4,
+      "forest": 0.9,
+      "homestead": 1.6,
+      "waterbody": 0.8
+    },
+    "name": "Compensation Assessment & Land-Value Model",
+    "statutory_structure": "market value (area x guidance rate x land-class factor) + 100% solatium + R&R",
+    "target": "compensation estimate in INR, with a range and a factor breakdown",
+    "uncertainty": {
+      "base_spread_percent": 10.0,
+      "widening_conditions": [
+        {
+          "add_percent": 5.0,
+          "because": "the Record of Rights extract is not on file",
+          "id": "no_ror"
+        },
+        {
+          "add_percent": 3.0,
+          "because": "access is poor, which makes comparable sales harder to apply",
+          "id": "far_from_road"
+        },
+        {
+          "add_percent": 2.0,
+          "because": "large parcels transact less often, so comparables are thinner",
+          "id": "large_parcel"
+        }
+      ]
+    },
+    "worked_examples": [
+      {
+        "name": "Ordinary irrigated agricultural parcel near a road",
+        "result": {
+          "disclosure": "Demonstration model. The estimate is a weighted-factor calculation, not a trained valuation model, and it is not a substitute for the Collector's determination under s.23.",
+          "estimate_inr": 15302000.0,
+          "factors": [
+            {
+              "amount": 7200000.0,
+              "id": "market_value",
+              "kind": "statutory",
+              "label": "Market value (area x guidance rate)"
+            },
+            {
+              "amount": 0.0,
+              "id": "land_class",
+              "kind": "statutory",
+              "label": "Land classification: agricultural",
+              "note": "applied as a factor of 1.00 against the village guidance rate"
+            },
+            {
+              "amount": 7200000.0,
+              "id": "solatium",
+              "kind": "statutory",
+              "label": "Solatium at 100%"
+            },
+            {
+              "amount": 50000.0,
+              "id": "rr",
+              "kind": "statutory",
+              "label": "Rehabilitation and resettlement entitlement"
+            },
+            {
+              "amount": 504000.0,
+              "id": "road_frontage",
+              "kind": "demonstration",
+              "label": "Road frontage",
+              "note": "the parcel abuts a road, which raises realisable value",
+              "rate_percent": 7.0
+            },
+            {
+              "amount": 324000.0,
+              "id": "irrigated",
+              "kind": "demonstration",
+              "label": "Irrigated land",
+              "note": "assured irrigation supports a higher crop value",
+              "rate_percent": 4.5
+            },
+            {
+              "amount": 24000.0,
+              "id": "trees",
+              "kind": "demonstration",
+              "label": "Trees (4)",
+              "note": "a flat demonstration rate of Rs. 6,000 per tree"
+            }
+          ],
+          "kind": "demonstration weighted-factor model",
+          "model": "CALM",
+          "model_version": "calm-demo-1.0.0+pulse-demo-1.0.0",
+          "range_high_inr": 16832200.0,
+          "range_low_inr": 13771800.0,
+          "spread_percent": 10.0,
+          "spread_reason": "the record is complete and comparable sales are available",
+          "statutory_subtotal_inr": 14450000.0
+        }
+      },
+      {
+        "name": "Commercial plot, thin record",
+        "result": {
+          "disclosure": "Demonstration model. The estimate is a weighted-factor calculation, not a trained valuation model, and it is not a substitute for the Collector's determination under s.23.",
+          "estimate_inr": 11558400.0,
+          "factors": [
+            {
+              "amount": 4320000.0,
+              "id": "market_value",
+              "kind": "statutory",
+              "label": "Market value (area x guidance rate)"
+            },
+            {
+              "amount": 6048000.0,
+              "id": "land_class",
+              "kind": "statutory",
+              "label": "Land classification: commercial",
+              "note": "applied as a factor of 2.40 against the village guidance rate"
+            },
+            {
+              "amount": 4320000.0,
+              "id": "solatium",
+              "kind": "statutory",
+              "label": "Solatium at 100%"
+            },
+            {
+              "amount": 0.0,
+              "id": "rr",
+              "kind": "statutory",
+              "label": "Rehabilitation and resettlement entitlement"
+            },
+            {
+              "amount": 302400.0,
+              "id": "road_frontage",
+              "kind": "demonstration",
+              "label": "Road frontage",
+              "note": "the parcel abuts a road, which raises realisable value",
+              "rate_percent": 7.0
+            },
+            {
+              "amount": 216000.0,
+              "id": "near_town",
+              "kind": "demonstration",
+              "label": "Proximity to a town",
+              "note": "the parcel is within two kilometres of an urban area",
+              "rate_percent": 5.0
+            },
+            {
+              "amount": 2400000.0,
+              "id": "structures",
+              "kind": "statutory",
+              "label": "Structures on the land",
+              "note": "compensated separately from the land value"
+            }
+          ],
+          "kind": "demonstration weighted-factor model",
+          "model": "CALM",
+          "model_version": "calm-demo-1.0.0+pulse-demo-1.0.0",
+          "range_high_inr": 13292160.0,
+          "range_low_inr": 9824640.0,
+          "spread_percent": 15.0,
+          "spread_reason": "the Record of Rights extract is not on file",
+          "statutory_subtotal_inr": 8640000.0
+        }
+      },
+      {
+        "name": "Barren land far from any road",
+        "result": {
+          "disclosure": "Demonstration model. The estimate is a weighted-factor calculation, not a trained valuation model, and it is not a substitute for the Collector's determination under s.23.",
+          "estimate_inr": 28560000.0,
+          "factors": [
+            {
+              "amount": 14280000.0,
+              "id": "market_value",
+              "kind": "statutory",
+              "label": "Market value (area x guidance rate)"
+            },
+            {
+              "amount": -4284000.0,
+              "id": "land_class",
+              "kind": "statutory",
+              "label": "Land classification: barren",
+              "note": "applied as a factor of 0.70 against the village guidance rate"
+            },
+            {
+              "amount": 14280000.0,
+              "id": "solatium",
+              "kind": "statutory",
+              "label": "Solatium at 100%"
+            },
+            {
+              "amount": 0.0,
+              "id": "rr",
+              "kind": "statutory",
+              "label": "Rehabilitation and resettlement entitlement"
+            }
+          ],
+          "kind": "demonstration weighted-factor model",
+          "model": "CALM",
+          "model_version": "calm-demo-1.0.0+pulse-demo-1.0.0",
+          "range_high_inr": 32844000.0,
+          "range_low_inr": 24276000.0,
+          "spread_percent": 15.0,
+          "spread_reason": "access is poor, which makes comparable sales harder to apply; large parcels transact less often, so comparables are thinner",
+          "statutory_subtotal_inr": 28560000.0
+        }
+      }
+    ]
+  },
+  "data_provenance": "No real acquisition data was available in this environment. No synthetic training set was used either, because no training takes place.",
+  "libraries": {
+    "lightgbm": "unavailable",
+    "note": "not required, as neither model is trained",
+    "scikit_learn": "unavailable (no PyPI access)",
+    "shap": "unavailable",
+    "xgboost": "unavailable"
+  },
+  "model_version": "calm-demo-1.0.0+pulse-demo-1.0.0",
+  "pulse": {
+    "mapping": {
+      "form": "probability = 1 / (1 + e^(-(score - midpoint) * steepness))",
+      "midpoint": 34.0,
+      "steepness": 0.055
+    },
+    "name": "Parcel-level Uncertainty & Litigation Signal Engine",
+    "signals": [
+      {
+        "id": "litigation",
+        "label": "A court case is pending over this land",
+        "per_unit": false,
+        "points": 26
+      },
+      {
+        "id": "title_dispute",
+        "label": "Ownership is disputed",
+        "per_unit": false,
+        "points": 24
+      },
+      {
+        "id": "objection",
+        "label": "The landholder has filed an objection",
+        "per_unit": false,
+        "points": 18
+      },
+      {
+        "id": "clearance_blocker",
+        "label": "A critical clearance check is unresolved",
+        "per_unit": false,
+        "points": 14
+      },
+      {
+        "id": "encumbrance",
+        "label": "The land is mortgaged or charged",
+        "per_unit": false,
+        "points": 10
+      },
+      {
+        "id": "prior_acquisition",
+        "label": "An earlier acquisition attempt exists",
+        "per_unit": false,
+        "points": 9
+      },
+      {
+        "id": "no_ror",
+        "label": "The Record of Rights extract is not on file",
+        "per_unit": false,
+        "points": 9
+      },
+      {
+        "id": "consent_pending",
+        "label": "Owner consent is still pending",
+        "per_unit": true,
+        "points": 7
+      },
+      {
+        "id": "co_owners",
+        "label": "Multiple co-owners or legal heirs",
+        "per_unit": true,
+        "points": 5
+      },
+      {
+        "id": "sla_slipping",
+        "label": "The statutory clock is slipping",
+        "per_unit": false,
+        "points": 12
+      },
+      {
+        "id": "identity_unverified",
+        "label": "An owner's identity is not yet verified",
+        "per_unit": false,
+        "points": 6
+      },
+      {
+        "id": "missing_documents",
+        "label": "Required documents are incomplete",
+        "per_unit": false,
+        "points": 6
+      }
+    ],
+    "target": "probability that the case is delayed or litigated",
+    "tiers": {
+      "high": "probability >= 0.55",
+      "low": "probability < 0.25",
+      "medium": "0.25 <= probability < 0.55"
+    },
+    "worked_examples": [
+      {
+        "name": "Clean case, consent given, record complete",
+        "result": {
+          "disclosure": "Demonstration model. The probability comes from fixed signal weights, not from a trained classifier, and is one input to a decision that remains the officer's.",
+          "kind": "demonstration weighted-signal model",
+          "model": "PULSE",
+          "model_version": "calm-demo-1.0.0+pulse-demo-1.0.0",
+          "probability": 0.1335,
+          "probability_percent": 13.4,
+          "reason_count": 0,
+          "reasons": [],
+          "recommended_action": "No special action needed. Keep to the ordinary schedule.",
+          "score": 0.0,
+          "tier": "low"
+        }
+      },
+      {
+        "name": "Four co-owners, one consent outstanding, in survey",
+        "result": {
+          "disclosure": "Demonstration model. The probability comes from fixed signal weights, not from a trained classifier, and is one input to a decision that remains the officer's.",
+          "kind": "demonstration weighted-signal model",
+          "model": "PULSE",
+          "model_version": "calm-demo-1.0.0+pulse-demo-1.0.0",
+          "probability": 0.5818,
+          "probability_percent": 58.2,
+          "reason_count": 4,
+          "reasons": [
+            {
+              "id": "co_owners",
+              "label": "Multiple co-owners or legal heirs (3)",
+              "points": 15.0,
+              "share_percent": 37.5
+            },
+            {
+              "id": "sla_slipping",
+              "label": "The statutory clock is slipping",
+              "points": 12.0,
+              "share_percent": 30.0
+            },
+            {
+              "id": "consent_pending",
+              "label": "Owner consent is still pending",
+              "points": 7.0,
+              "share_percent": 17.5
+            },
+            {
+              "id": "identity_unverified",
+              "label": "An owner's identity is not yet verified",
+              "points": 6.0,
+              "share_percent": 15.0
+            }
+          ],
+          "recommended_action": "Place this case in the Collector's weekly review and resolve the highest-scoring issue before the next stage.",
+          "score": 40.0,
+          "tier": "high"
+        }
+      },
+      {
+        "name": "Litigation, disputed title, objection filed",
+        "result": {
+          "disclosure": "Demonstration model. The probability comes from fixed signal weights, not from a trained classifier, and is one input to a decision that remains the officer's.",
+          "kind": "demonstration weighted-signal model",
+          "model": "PULSE",
+          "model_version": "calm-demo-1.0.0+pulse-demo-1.0.0",
+          "probability": 0.9955,
+          "probability_percent": 99.5,
+          "reason_count": 10,
+          "reasons": [
+            {
+              "id": "litigation",
+              "label": "A court case is pending over this land",
+              "points": 26.0,
+              "share_percent": 19.7
+            },
+            {
+              "id": "title_dispute",
+              "label": "Ownership is disputed",
+              "points": 24.0,
+              "share_percent": 18.2
+            },
+            {
+              "id": "objection",
+              "label": "The landholder has filed an objection",
+              "points": 18.0,
+              "share_percent": 13.6
+            },
+            {
+              "id": "clearance_blocker",
+              "label": "A critical clearance check is unresolved",
+              "points": 14.0,
+              "share_percent": 10.6
+            },
+            {
+              "id": "sla_slipping",
+              "label": "The statutory clock is slipping",
+              "points": 12.0,
+              "share_percent": 9.1
+            },
+            {
+              "id": "co_owners",
+              "label": "Multiple co-owners or legal heirs (2)",
+              "points": 10.0,
+              "share_percent": 7.6
+            },
+            {
+              "id": "no_ror",
+              "label": "The Record of Rights extract is not on file",
+              "points": 9.0,
+              "share_percent": 6.8
+            },
+            {
+              "id": "consent_pending",
+              "label": "Owner consent is still pending",
+              "points": 7.0,
+              "share_percent": 5.3
+            },
+            {
+              "id": "identity_unverified",
+              "label": "An owner's identity is not yet verified",
+              "points": 6.0,
+              "share_percent": 4.5
+            },
+            {
+              "id": "missing_documents",
+              "label": "Required documents are incomplete",
+              "points": 6.0,
+              "share_percent": 4.5
+            }
+          ],
+          "recommended_action": "Place this case in the Collector's weekly review and resolve the highest-scoring issue before the next stage.",
+          "score": 132.0,
+          "tier": "high"
+        }
+      }
+    ]
+  },
+  "training": "none \u2014 these are demonstration weighted-factor models, not trained models"
+}
